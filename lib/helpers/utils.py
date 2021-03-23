@@ -36,7 +36,7 @@ except Exception:
     SUPPORTS_POOL = False
 
 
-ADDON_ID = "script.module.metadatautils"
+ADDON_ID = "script.module.metadatautilsmod"
 KODI_LANGUAGE = xbmc.getLanguage(xbmc.ISO_639_1)
 if not KODI_LANGUAGE:
     KODI_LANGUAGE = "en"
