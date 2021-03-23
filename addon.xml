@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="script.module.metadatautils"
-       name="Metadata and Artwork module"
+<addon id="script.module.metadatautilsmod"
+       name="Metadata and Artwork module MOD"
        version="1.0.38"
        provider-name="marcelveldt and others">
     <requires>
