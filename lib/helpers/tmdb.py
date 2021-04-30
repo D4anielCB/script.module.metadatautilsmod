@@ -21,11 +21,18 @@ import xbmcaddon
 import datetime
 
 def ST(x):
-    x = str(x)
-    py = "C:\\Users\\281920\\AppData\\Roaming\\Kodi\\addons\\plugin.video.CubePlayMeta\\study.txt"
+    #x = str(str(x).encode("utf-8"))
+    py = "D:\\Kodi19.0\\portable_data\\addons\\plugin.video.CubePlay\\study.txt"
+    if type(x) == type({}) or type(x) == type([]):
+        y = json.dumps(x, indent=4, ensure_ascii=True)
+    else:
+        try:
+            y = str(x)
+        except:
+            y = str(str(x).encode("utf-8"))
     file = open(py, "w")
     #file = open(py, "a+")
-    file.write(x)
+    file.write(y)
     file.close()
 	
 class Tmdb(object):
@@ -215,7 +222,7 @@ class Tmdb(object):
                         for cast_member in data["credits"]["cast"]:
                             cast_thumb = ""
                             if cast_member["profile_path"]:
-                                cast_thumb = "http://image.tmdb.org/t/p/original%s" % cast_member["profile_path"]
+                                cast_thumb = "https://image.tmdb.org/t/p/original%s" % cast_member["profile_path"]
                             details["cast"].append({"name": cast_member["name"], "role": cast_member["character"], "thumbnail": cast_thumb})
             except:
                 details = {}
@@ -242,6 +249,7 @@ class Tmdb(object):
                 d[-1]['TVShowTitle'] = data['name']
                 d[-1]['imdbnumber'] = data['external_ids']['imdb_id']
                 d[-1]['tmdb_id'] = str(data['id'])
+                d[-1]["tvdb_id"] = str(data['external_ids']['tvdb_id'])
                 d[-1]["rating"] = data["vote_average"]
                 d[-1]["votes"] = data["vote_count"]
                 d[-1]["rating.tmdb"] = data["vote_average"]
@@ -258,19 +266,20 @@ class Tmdb(object):
                 #d[-1]["castandrole"] = []
                 d[-1]["writer"] = []
                 d[-1]["director"] = []
+                #ST(d)
                 if "credits" in data:
                     if "cast" in data["credits"]:
                         for cast_member in data["credits"]["cast"]:
                             cast_thumb = ""
                             if cast_member["profile_path"]:
-                                cast_thumb = "http://image.tmdb.org/t/p/original%s" % cast_member["profile_path"]
+                                cast_thumb = "https://image.tmdb.org/t/p/original%s" % cast_member["profile_path"]
                             d[-1]["cast"].append({"name": cast_member["name"], "role": cast_member["character"], "thumbnail": cast_thumb})
                             #d[-1]["castandrole"].append((cast_member["name"], cast_member["character"]))
                     if "crew" in data["credits"]:
                         for crew_member in data["credits"]["crew"]:
                             cast_thumb = ""
                             if crew_member["profile_path"]:
-                                cast_thumb = "http://image.tmdb.org/t/p/original%s" % crew_member["profile_path"]
+                                cast_thumb = "https://image.tmdb.org/t/p/original%s" % crew_member["profile_path"]
                             if crew_member["job"] in ["Author", "Writer"]:
                                 d[-1]["writer"].append(crew_member["name"])
                             if crew_member["job"] in ["Producer", "Executive Producer"]:
@@ -288,28 +297,44 @@ class Tmdb(object):
                 d[-1]['cover_url'] = 'https://image.tmdb.org/t/p/original'+ data['poster_path']
                 d[-1]['imagepi'] = ""
                 #d[-1]['backdrop_url'] = 'https://image.tmdb.org/t/p/original'+ data['images']['backdrops'][0]['file_path']
-                d[-1]['backdrop_url'] = 'https://image.tmdb.org/t/p/original' + data['backdrop_path']
+                #ST(data)
+                d[-1]['backdrop_url'] = 'https://image.tmdb.org/t/p/original' + str(data['backdrop_path'])
                 #ST('https://image.tmdb.org/t/p/original'+ data['images']['backdrops'][0]['file_path'])
                 #d[-1]["season"] = [0,1,2,3,4,5,6,7,8,9,10,11,12]
                 for video in data["videos"]["results"]:
                     if video["site"] == "YouTube" and video["type"] == "Trailer":
                         d[-1]["trailer"] = 'plugin://plugin.video.youtube/?action=play_video&videoid=%s' % video["key"]
                         break
-                d[-1]['season_len'] = len(data['seasons'])
-                #ST(len (data['seasons']) )
+                if "number_of_seasons" in data:
+                    d[-1]['Seasons'] = data["number_of_seasons"]
+                else:
+                    d[-1]['Seasons'] = 0
+                if "number_of_episodes" in data:
+                    d[-1]['Episodes'] = data["number_of_episodes"]
+                else:
+                    d[-1]['Episodes'] = 0
+                #ST(d)
                 if "seasons" in data:
                     for season in data["seasons"]:
                         d[ season["season_number"] ] = {}
                         d[ season["season_number"] ]["season_number"] = season["season_number"]
-                        d[ season["season_number"] ]["episode_count"] = season["episode_count"]
-                        d[ season["season_number"] ]["cover_url"] = 'https://image.tmdb.org/t/p/original' + season["poster_path"]
-                        d[ season["season_number"] ]["premiered"] = season["air_date"]
-                        d[ season["season_number"] ]["name"] = season["name"]
-                        d[ season["season_number"] ]["plot2"] = season["overview"]
-                    #d[-1]["season"][10]="a"
-                    #ST(details["season"])
+                        if season['air_date']:
+                            d[ season["season_number"] ]["episode_count"] = season["episode_count"]
+                            if season["poster_path"]:
+                                d[ season["season_number"] ]["cover_url"] = 'https://image.tmdb.org/t/p/original' + season["poster_path"]
+                            else:
+                                d[ season["season_number"] ]["cover_url"] = d[-1]['cover_url']
+                            d[ season["season_number"] ]["premiered"] = season["air_date"]
+                            d[ season["season_number"] ]["name"] = season["name"]
+                            d[ season["season_number"] ]["plot2"] = season["overview"]
+                        else:
+                            d[ season["season_number"] ]["episode_count"] = season["episode_count"]
+                            d[ season["season_number"] ]["cover_url"] = ""
+                            d[ season["season_number"] ]["premiered"] = ""
+                            d[ season["season_number"] ]["name"] = season["name"]
+                            d[ season["season_number"] ]["plot2"] = season["overview"]
             except:
-                d = {}
+                d = {"erro1": "erro"}
         #ST( type(d) )
         return d
     def get_tvshow_detail(self, tmdb_id, title="", year="", ignore_cache=False, lang=""):
@@ -351,6 +376,7 @@ class Tmdb(object):
 #-------------------------------
     def get_data2(self, endpoint, params, ignore_cache=False):
         params["api_key"] = "bd6af17904b638d482df1a924f1eabb4"
+        #params["append_to_response"] = "keywords,videos,external_ids,credits,images"
 		# without personal (or addon specific) api key = rate limiting and older info from cache
         expiration = datetime.timedelta(days=60)
         cachestr = "tmdb.%s" % params.values()
@@ -362,7 +388,7 @@ class Tmdb(object):
             result = cache
         else:
             # no cache, grab data from API
-            url = u'http://api.themoviedb.org/3/%s' % endpoint
+            url = u'https://api.themoviedb.org/3/%s' % endpoint
             #ST(url)
             result = get_json(url, params)
             self.cache.set(endpoint, result, expiration=expiration)
@@ -407,11 +433,8 @@ class Tmdb(object):
             # without personal (or addon specific) api key = rate limiting and older info from cache
             rate_limit = ("themoviedb.org", 5)
             expiration = datetime.timedelta(days=60)
-        if sys.version_info.major == 3:
-            cachestr = "tmdb.%s" % params.values()
-        else:
-            cachestr = "tmdb.%s" % params.itervalues()
-        cache = self.cache.get(cachestr)
+        cachestr = "tmdb.%s" % params.values()
+        cache = self.cache.get(endpoint)
         if cache:
             # data obtained from cache
             result = cache
@@ -426,9 +449,7 @@ class Tmdb(object):
                     result2 = get_json(url, params)
                     if result2 and result2.get("overview"):
                         result = result2
-            self.cache.set(url, result, expiration=expiration)
-        #a = b"{'one': 1, 'two': 2}"
-        #ST( json.dumps(result)   ) 
+            self.cache.set(endpoint, result, expiration=expiration)
         return result
 
     def map_details(self, data, media_type):
